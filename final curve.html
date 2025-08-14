@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tensile Test Curve: Force vs Extension</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { text-align: center; }
+    .slider-container { width: 60%; margin: auto; text-align: center; }
+</style>
+</head>
+<body>
+
+<h2>Tensile Test Curve (Force vs Extension)</h2>
+<div id="tensilePlot" style="width: 90%; height: 600px; margin: auto;"></div>
+<div class="slider-container">
+    <label for="strengthSlider">Adjust Strength:</label>
+    <input type="range" id="strengthSlider" min="1" max="2" step="0.01" value="1">
+</div>
+
+<script>
+// Base data (force in N, extension in mm) - stops at fracture at 800 N
+let extension = [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0, 3.5];
+let baseForce = [0, 200, 400, 600, 800, 1000, 1200, 1300, 800, 500];
+
+let elastic_end = 4; // up to 0.8 mm
+let plastic_end = 7; // up to 2.0 mm
+
+function plotCurve(strengthFactor) {
+    let force = baseForce.slice();
+
+    // Scale all regions proportionally to maintain shape
+    for (let i = 0; i < force.length; i++) {
+        force[i] = force[i] * strengthFactor;
+    }
+
+    let elasticTrace = {
+        x: extension.slice(0, elastic_end + 1),
+        y: force.slice(0, elastic_end + 1),
+        mode: 'lines+markers',
+        name: 'Elastic Region',
+        line: { color: 'blue', width: 3 }
+    };
+
+    let plasticTrace = {
+        x: extension.slice(elastic_end, plastic_end + 1),
+        y: force.slice(elastic_end, plastic_end + 1),
+        mode: 'lines+markers',
+        name: 'Plastic Region',
+        line: { color: 'orange', width: 3 }
+    };
+
+    let neckingTrace = {
+        x: extension.slice(plastic_end),
+        y: force.slice(plastic_end),
+        mode: 'lines+markers',
+        name: 'Necking & Fracture',
+        line: { color: 'red', width: 3 }
+    };
+
+    let layout = {
+        xaxis: { title: 'Extension (mm)' },
+        yaxis: { title: 'Force (N)' },
+        legend: { x: 0.05, y: 0.95 },
+        hovermode: 'closest'
+    };
+
+    Plotly.newPlot('tensilePlot', [elasticTrace, plasticTrace, neckingTrace], layout);
+}
+
+document.getElementById('strengthSlider').addEventListener('input', function() {
+    plotCurve(parseFloat(this.value));
+});
+
+plotCurve(1);
+</script>
+
+</body>
+</html>
